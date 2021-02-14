@@ -401,7 +401,6 @@ type AppIface interface {
 	Config() *model.Config
 	Context() context.Context
 	CopyFileInfos(userId string, fileIds []string) ([]string, *model.AppError)
-	CreateAliasAccount(userName string, externalId string, platform string) *model.AppError
 	CreateAliasUser(user *model.User) (*model.User, *model.AppError)
 	CreateChannel(channel *model.Channel, addMember bool) (*model.Channel, *model.AppError)
 	CreateChannelWithUser(channel *model.Channel, userId string) (*model.Channel, *model.AppError)
@@ -545,6 +544,7 @@ type AppIface interface {
 	GetEmojiImage(emojiId string) ([]byte, string, *model.AppError)
 	GetEmojiList(page, perPage int, sort string) ([]*model.Emoji, *model.AppError)
 	GetErrorListForEmailsOverLimit(emailList []string, cloudUserLimit int64) ([]string, []*model.EmailInviteWithError, *model.AppError)
+	GetExtRefFromAliasUserId(aliasId string) (*model.ExtRef, *model.AppError)
 	GetFile(fileId string) ([]byte, *model.AppError)
 	GetFileInfo(fileId string) (*model.FileInfo, *model.AppError)
 	GetFileInfos(page, perPage int, opt *model.GetFileInfosOptions) ([]*model.FileInfo, *model.AppError)
@@ -599,6 +599,7 @@ type AppIface interface {
 	GetOAuthSignupEndpoint(w http.ResponseWriter, r *http.Request, service, teamId string) (string, *model.AppError)
 	GetOAuthStateToken(token string) (*model.Token, *model.AppError)
 	GetOpenGraphMetadata(requestURL string) *opengraph.OpenGraph
+	GetOrCreateAliasUserId(userName string, externalId string, platform string) (string, *model.AppError)
 	GetOrCreateDirectChannel(userId, otherUserId string) (*model.Channel, *model.AppError)
 	GetOutgoingWebhook(hookId string) (*model.OutgoingWebhook, *model.AppError)
 	GetOutgoingWebhooksForChannelPageByUser(channelId string, userId string, page, perPage int) ([]*model.OutgoingWebhook, *model.AppError)
