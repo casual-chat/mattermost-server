@@ -13,7 +13,9 @@ import (
 func (api *API) InitExtChat() {
 	api.BaseRoutes.ExtChat.Handle("/isLinked", api.ApiHandler(isLinked)).Methods("GET")
 	api.BaseRoutes.ExtChat.Handle("/linkAccount", api.ApiSessionRequired(linkAccount)).Methods("POST")
-	api.BaseRoutes.ExtChat.Handle("/createAliasAccount", api.ApiHandler(createAliasAccount)).Methods("POST")
+	//api.BaseRoutes.ExtChat.Handle("/createAliasAccount", api.ApiHandler(createAliasAccount)).Methods("POST")
+	api.BaseRoutes.ExtChat.Handle("/aliasUserId", api.ApiHandler(getAliasUserId)).Methods("GET")
+	api.BaseRoutes.ExtChat.Handle("/ref", api.ApiHandler(getExtRef)).Methods("GET")
 }
 
 func isLinked(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -42,14 +44,37 @@ func linkAccount(c *Context, w http.ResponseWriter, r *http.Request) {
 	ReturnStatusOK(w)
 }
 
-func createAliasAccount(c *Context, w http.ResponseWriter, r *http.Request) {
+// func createAliasAccount(c *Context, w http.ResponseWriter, r *http.Request) {
+// 	externalPlatform := c.Params.ExtChatPlatform
+// 	externalId := r.URL.Query().Get("externalId")
+// 	username := r.URL.Query().Get("nickName")
+// 	err := c.App.CreateAliasAccount(username, externalId, externalPlatform)
+// 	if err != nil {
+// 		c.Err = err
+// 		return
+// 	}
+// 	ReturnStatusOK(w)
+// }
+
+func getAliasUserId(c *Context, w http.ResponseWriter, r *http.Request) {
 	externalPlatform := c.Params.ExtChatPlatform
 	externalId := r.URL.Query().Get("externalId")
-	username := r.URL.Query().Get("nickName")
-	err := c.App.CreateAliasAccount(username, externalId, externalPlatform)
+	username := r.URL.Query().Get("username")
+	userId, err := c.App.GetOrCreateAliasUserId(username, externalId, externalPlatform)
 	if err != nil {
 		c.Err = err
 		return
 	}
-	ReturnStatusOK(w)
+	w.Write([]byte(userId))
+}
+
+func getExtRef(c *Context, w http.ResponseWriter, r *http.Request) {
+	userId := r.URL.Query().Get("userId")
+	ext_ref, err := c.App.GetExtRefFromAliasUserId(userId)
+	if err != nil {
+		w.Write([]byte(nil))
+		return
+	}
+
+	w.Write([]byte(ext_ref.ToJson()))
 }
