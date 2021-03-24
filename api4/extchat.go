@@ -4,6 +4,7 @@
 package api4
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -13,9 +14,10 @@ import (
 func (api *API) InitExtChat() {
 	api.BaseRoutes.ExtChat.Handle("/isLinked", api.ApiHandler(isLinked)).Methods("GET")
 	api.BaseRoutes.ExtChat.Handle("/linkAccount", api.ApiSessionRequired(linkAccount)).Methods("POST")
-	//api.BaseRoutes.ExtChat.Handle("/createAliasAccount", api.ApiHandler(createAliasAccount)).Methods("POST")
+	api.BaseRoutes.ExtChat.Handle("/post", api.ApiHandler(postToChannel)).Methods("POST")
 	api.BaseRoutes.ExtChat.Handle("/aliasUserId", api.ApiHandler(getAliasUserId)).Methods("GET")
 	api.BaseRoutes.ExtChat.Handle("/ref", api.ApiHandler(getExtRef)).Methods("GET")
+	api.BaseRoutes.ExtChat.Handle("/refByChannel", api.ApiHandler(getExtRefByChannelId)).Methods("GET")
 }
 
 func isLinked(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -65,16 +67,77 @@ func getAliasUserId(c *Context, w http.ResponseWriter, r *http.Request) {
 		c.Err = err
 		return
 	}
-	w.Write([]byte(userId))
+	json_str, json_err := json.Marshal(userId)
+	if json_err != nil {
+		c.Err = model.NewAppError("AliasToJson", "app.ext_ref.create_alias.internal_error", nil, json_err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(json_str)
 }
 
 func getExtRef(c *Context, w http.ResponseWriter, r *http.Request) {
 	userId := r.URL.Query().Get("userId")
 	ext_ref, err := c.App.GetExtRefFromAliasUserId(userId)
 	if err != nil {
-		w.Write([]byte(nil))
+		w.Write([]byte("{}"))
 		return
 	}
 
 	w.Write([]byte(ext_ref.ToJson()))
+}
+
+func getExtRefByChannelId(c *Context, w http.ResponseWriter, r *http.Request) {
+	channelId := r.URL.Query().Get("channelId")
+	userId := r.URL.Query().Get("userId")
+	channel, err := c.App.GetChannel(channelId)
+	if err != nil {
+		c.Err = err
+		return
+	}
+	if channel.Type != model.CHANNEL_DIRECT {
+		c.Err = model.NewAppError("GetExtRefByChannel", "app.ext_ref.get_by_channel.internal_error", nil, "Channel not direct", http.StatusInternalServerError)
+		return
+	}
+	members, members_err := c.App.GetChannelMembersPage(channelId, 0, 2)
+	if members_err != nil {
+		c.Err = members_err
+		return
+	}
+	var aliasId string = ""
+	for _, member := range *members {
+		if member.UserId != userId {
+			aliasId = member.UserId
+		}
+	}
+	if aliasId == "" {
+		w.Write([]byte("{}"))
+		return
+	}
+	ext_ref, ext_ref_err := c.App.GetExtRefFromAliasUserId(aliasId)
+	if ext_ref_err != nil {
+		w.Write([]byte("{}"))
+		return
+	}
+
+	w.Write([]byte(ext_ref.ToJson()))
+}
+
+func postToChannel(c *Context, w http.ResponseWriter, r *http.Request) {
+	post := model.PostFromJson(r.Body)
+	userId := post.UserId
+	user, err := c.App.GetUser(userId)
+	if err != nil {
+		c.Err = err
+		return
+	}
+	if !user.IsAlias {
+		ReturnStatusOK(w)
+		return
+	}
+	_, err_create := c.App.CreatePostAsUser(post, userId, false)
+	if err_create != nil {
+		c.Err = err_create
+		return
+	}
+	ReturnStatusOK(w)
 }
