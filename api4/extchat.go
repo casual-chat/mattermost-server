@@ -4,54 +4,28 @@
 package api4
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 
-	"github.com/mattermost/mattermost-server/v5/extchat"
 	"github.com/mattermost/mattermost-server/v5/model"
 )
 
 func (api *API) InitExtChat() {
-	api.BaseRoutes.ExtChat.Handle("/authenticate", api.ApiHandler(startAuthentication)).Methods("POST")
-	api.BaseRoutes.ExtChat.Handle("/verify", api.ApiHandler(verifyPasscode)).Methods("GET")
 	api.BaseRoutes.ExtChat.Handle("/isLinked", api.ApiHandler(isLinked)).Methods("GET")
 	api.BaseRoutes.ExtChat.Handle("/linkAccount", api.ApiSessionRequired(linkAccount)).Methods("POST")
-	api.BaseRoutes.ExtChat.Handle("/createAliasAccount", api.ApiHandler(createAliasAccount)).Methods("POST")
-	// api.BaseRoutes.Emojis.Handle("/search", api.ApiSessionRequired(searchEmojis)).Methods("POST")
-	// api.BaseRoutes.Emojis.Handle("/autocomplete", api.ApiSessionRequired(autocompleteEmojis)).Methods("GET")
-	// api.BaseRoutes.Emoji.Handle("", api.ApiSessionRequired(deleteEmoji)).Methods("DELETE")
-	// api.BaseRoutes.Emoji.Handle("", api.ApiSessionRequired(getEmoji)).Methods("GET")
-	// api.BaseRoutes.EmojiByName.Handle("", api.ApiSessionRequired(getEmojiByName)).Methods("GET")
-	// api.BaseRoutes.Emoji.Handle("/image", api.ApiSessionRequiredTrustRequester(getEmojiImage)).Methods("GET")
-	// api.BaseRoutes.Emojis.Handle("/private", api.ApiSessionRequired(createPrivateEmoji)).Methods("POST")
-	// api.BaseRoutes.Emojis.Handle("/private", api.ApiSessionRequired(getPrivateEmojiList)).Methods("GET")
-	// api.BaseRoutes.Emoji.Handle("/privateimage", api.ApiSessionRequiredTrustRequester(getPrivateEmojiImage)).Methods("GET")
-	// api.BaseRoutes.Emoji.Handle("/checkprivate", api.ApiSessionRequiredTrustRequester(getCanAccessPrivateEmojiImage)).Methods("GET")
-	// api.BaseRoutes.Emoji.Handle("/save", api.ApiSessionRequiredTrustRequester(savePrivateEmoji)).Methods("POST")
-	// api.BaseRoutes.Emojis.Handle("/public", api.ApiSessionRequiredTrustRequester(getPublicEmojiList)).Methods("GET")
-	// api.BaseRoutes.Emoji.Handle("/access", api.ApiSessionRequired(deleteEmojiAccess)).Methods("DELETE")
-	// api.BaseRoutes.Emoji.Handle("/withAccess", api.ApiSessionRequired(deleteEmojiWithAccess)).Methods("DELETE")
-}
-
-func getAdapterFromPlatform(platform string) (extchat.ExtChatAdapter, bool) {
-	switch platform {
-	case "telegram":
-		return &extchat.TelegramAdapter{}, true
-	default:
-		return nil, false
-	}
+	api.BaseRoutes.ExtChat.Handle("/post", api.ApiHandler(postToChannel)).Methods("POST")
+	api.BaseRoutes.ExtChat.Handle("/aliasUserId", api.ApiHandler(getAliasUserId)).Methods("GET")
+	api.BaseRoutes.ExtChat.Handle("/ref", api.ApiHandler(getExtRef)).Methods("GET")
+	api.BaseRoutes.ExtChat.Handle("/refByChannel", api.ApiHandler(getExtRefByChannelId)).Methods("GET")
 }
 
 func isLinked(c *Context, w http.ResponseWriter, r *http.Request) {
 	externalPlatform := c.Params.ExtChatPlatform
 	realUserId := r.URL.Query().Get("realUserId")
 	isLinked := c.App.IsLinked(realUserId, externalPlatform)
-	if isLinked {
-		w.Write([]byte("true"))
-		return
-	}
-	w.Write([]byte("false"))
-	return
 
+	w.Write([]byte(fmt.Sprintf("%t", isLinked)))
 }
 
 func linkAccount(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -72,61 +46,98 @@ func linkAccount(c *Context, w http.ResponseWriter, r *http.Request) {
 	ReturnStatusOK(w)
 }
 
-func createAliasAccount(c *Context, w http.ResponseWriter, r *http.Request) {
+// func createAliasAccount(c *Context, w http.ResponseWriter, r *http.Request) {
+// 	externalPlatform := c.Params.ExtChatPlatform
+// 	externalId := r.URL.Query().Get("externalId")
+// 	username := r.URL.Query().Get("nickName")
+// 	err := c.App.CreateAliasAccount(username, externalId, externalPlatform)
+// 	if err != nil {
+// 		c.Err = err
+// 		return
+// 	}
+// 	ReturnStatusOK(w)
+// }
+
+func getAliasUserId(c *Context, w http.ResponseWriter, r *http.Request) {
 	externalPlatform := c.Params.ExtChatPlatform
 	externalId := r.URL.Query().Get("externalId")
-	username := r.URL.Query().Get("nickName")
-	// user := model.User{Email: "",
-	// 	Nickname: nickname,
-	// 	Password: "",
-	// 	Username: GenerateTestUsername()
-	// 	isAlias: true
-	// }
-	err := c.App.CreateAliasAccount(username, externalId, externalPlatform)
+	username := r.URL.Query().Get("username")
+	userId, err := c.App.GetOrCreateAliasUserId(username, externalId, externalPlatform)
 	if err != nil {
 		c.Err = err
 		return
 	}
-	ReturnStatusOK(w)
+	json_str, json_err := json.Marshal(userId)
+	if json_err != nil {
+		c.Err = model.NewAppError("AliasToJson", "app.ext_ref.create_alias.internal_error", nil, json_err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(json_str)
 }
 
-func startAuthentication(c *Context, w http.ResponseWriter, r *http.Request) {
-	adapter, ok := getAdapterFromPlatform(c.Params.ExtChatPlatform)
-	if !ok {
-		//error
-	}
-	username := r.URL.Query().Get("username")
-	if username == "" {
-		c.SetInvalidUrlParam("username")
+func getExtRef(c *Context, w http.ResponseWriter, r *http.Request) {
+	userId := r.URL.Query().Get("userId")
+	ext_ref, err := c.App.GetExtRefFromAliasUserId(userId)
+	if err != nil {
+		w.Write([]byte("{}"))
 		return
 	}
-	err := adapter.StartAuthentication(c.App, username)
-	if err != nil {
-		//error
-	}
-	ReturnStatusOK(w)
+
+	w.Write([]byte(ext_ref.ToJson()))
 }
 
-func verifyPasscode(c *Context, w http.ResponseWriter, r *http.Request) {
-	adapter, ok := getAdapterFromPlatform(c.Params.ExtChatPlatform)
-	if !ok {
-		//error
-	}
-
-	username := r.URL.Query().Get("username")
-	if username == "" {
-		c.SetInvalidUrlParam("username")
-		return
-	}
-
-	code := r.URL.Query().Get("code")
-	if code == "" {
-		c.SetInvalidUrlParam("code")
-		return
-	}
-	_, err := adapter.VerifyPasscode(c.App, username, code)
+func getExtRefByChannelId(c *Context, w http.ResponseWriter, r *http.Request) {
+	channelId := r.URL.Query().Get("channelId")
+	userId := r.URL.Query().Get("userId")
+	channel, err := c.App.GetChannel(channelId)
 	if err != nil {
-		//error
+		c.Err = err
+		return
+	}
+	if channel.Type != model.CHANNEL_DIRECT {
+		c.Err = model.NewAppError("GetExtRefByChannel", "app.ext_ref.get_by_channel.internal_error", nil, "Channel not direct", http.StatusInternalServerError)
+		return
+	}
+	members, members_err := c.App.GetChannelMembersPage(channelId, 0, 2)
+	if members_err != nil {
+		c.Err = members_err
+		return
+	}
+	var aliasId string = ""
+	for _, member := range *members {
+		if member.UserId != userId {
+			aliasId = member.UserId
+		}
+	}
+	if aliasId == "" {
+		w.Write([]byte("{}"))
+		return
+	}
+	ext_ref, ext_ref_err := c.App.GetExtRefFromAliasUserId(aliasId)
+	if ext_ref_err != nil {
+		w.Write([]byte("{}"))
+		return
+	}
+
+	w.Write([]byte(ext_ref.ToJson()))
+}
+
+func postToChannel(c *Context, w http.ResponseWriter, r *http.Request) {
+	post := model.PostFromJson(r.Body)
+	userId := post.UserId
+	user, err := c.App.GetUser(userId)
+	if err != nil {
+		c.Err = err
+		return
+	}
+	if !user.IsAlias {
+		ReturnStatusOK(w)
+		return
+	}
+	_, err_create := c.App.CreatePostAsUser(post, userId, false)
+	if err_create != nil {
+		c.Err = err_create
+		return
 	}
 	ReturnStatusOK(w)
 }
