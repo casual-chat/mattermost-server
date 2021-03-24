@@ -6,6 +6,7 @@ package app
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/mattermost/mattermost-server/v5/model"
 )
@@ -51,17 +52,25 @@ func (a *App) LinkAccount(extRef *model.ExtRef) *model.AppError {
 func (a *App) GetOrCreateAliasUserId(userName string, externalId string, platform string) (string, *model.AppError) {
 	ext_ref, err := a.Srv().Store.ExtRef().GetByExtIdAndPlatform(externalId, platform)
 	if err != nil {
-		return "", model.NewAppError("GetAlias", "app.ext_ref.get_alias.internal_error", nil, err.Error(), http.StatusInternalServerError)
+		ext_ref = &model.ExtRef{
+			RealUserId:       "",
+			ExternalId:       externalId,
+			ExternalPlatform: platform,
+			AliasUserId:      "",
+		}
+		//return "", model.NewAppError("GetAlias", "app.ext_ref.get_alias.internal_error", nil, err.Error(), http.StatusInternalServerError)
 	}
 	if ext_ref.AliasUserId != "" {
 		return ext_ref.AliasUserId, nil
 	}
 	nameWithPlatform := fmt.Sprintf("%s (%s)", userName, platform)
+	nameWithoutSpaces := strings.ReplaceAll(userName, " ", "-")
 	userModel := &model.User{
-		Email:    "",
+		Email:    strings.ToLower(fmt.Sprintf("%s@%s.com", nameWithoutSpaces, platform)),
 		Nickname: nameWithPlatform,
 		Password: "",
-		Username: nameWithPlatform,
+		Username: strings.ToLower(nameWithoutSpaces),
+		IsAlias:  true,
 	}
 	user, usr_err := a.Srv().Store.User().Save(userModel)
 	if usr_err != nil {
