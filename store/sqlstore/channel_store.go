@@ -556,6 +556,7 @@ func (s SqlChannelStore) Save(channel *model.Channel, maxChannelsPerTeam int64) 
 	return newChannel, err
 }
 
+
 func (s SqlChannelStore) CreateDirectChannel(user *model.User, otherUser *model.User) (*model.Channel, error) {
 	channel := new(model.Channel)
 
@@ -705,6 +706,35 @@ func (s SqlChannelStore) updateChannelT(transaction *gorp.Transaction, channel *
 	}
 
 	return channel, nil
+}
+
+func (s SqlChannelStore) GetChannelByTwoUsers(userId1 string, userId2 string) (string, *model.AppError){
+	var channelId string
+	err := s.GetReplica().SelectOne(&channelId,
+		`SELECT
+			Channels.Id
+			FROM
+				ChannelMembers
+			JOIN Channels on ChannelMembers.ChannelId = Channels.Id
+			WHERE
+				UserId = :UserId1
+				AND Channels.Type = 'D'
+                AND Channels.Id in (SELECT
+										ChannelId
+										FROM
+											ChannelMembers
+										WHERE
+											UserId = :UserId2)`,
+			
+				map[string]interface{}{"UserId1": userId1, "UserId2": userId2})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", model.NewAppError("SqlChannelStore.GetChannelByTwoUsers", "store.sql_channel.get_channel.app_error", nil, "userId="+userId1+" "+err.Error(), http.StatusNotFound)
+		}
+		return "", model.NewAppError("SqlChannelStore.GetChannelByTwoUsers", "store.sql_channel.get_channel.app_error", nil, "userId="+userId1+" "+err.Error(), http.StatusInternalServerError)
+	}
+	return channelId, nil
+
 }
 
 func (s SqlChannelStore) GetChannelUnread(channelId, userId string) (*model.ChannelUnread, *model.AppError) {
