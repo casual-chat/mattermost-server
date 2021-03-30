@@ -538,6 +538,29 @@ func (_m *ChannelStore) GetByNames(team_id string, names []string, allowFromCach
 	return r0, r1
 }
 
+// GetChannelByTwoUsers provides a mock function with given fields: userId1, userId2
+func (_m *ChannelStore) GetChannelByTwoUsers(userId1 string, userId2 string) (string, *model.AppError) {
+	ret := _m.Called(userId1, userId2)
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func(string, string) string); ok {
+		r0 = rf(userId1, userId2)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	var r1 *model.AppError
+	if rf, ok := ret.Get(1).(func(string, string) *model.AppError); ok {
+		r1 = rf(userId1, userId2)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*model.AppError)
+		}
+	}
+
+	return r0, r1
+}
+
 // GetChannelCounts provides a mock function with given fields: teamId, userId
 func (_m *ChannelStore) GetChannelCounts(teamId string, userId string) (*model.ChannelCounts, *model.AppError) {
 	ret := _m.Called(teamId, userId)
