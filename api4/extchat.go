@@ -18,6 +18,8 @@ func (api *API) InitExtChat() {
 	api.BaseRoutes.ExtChat.Handle("/aliasUserId", api.ApiHandler(getAliasUserId)).Methods("GET")
 	api.BaseRoutes.ExtChat.Handle("/ref", api.ApiHandler(getExtRef)).Methods("GET")
 	api.BaseRoutes.ExtChat.Handle("/refByChannel", api.ApiHandler(getExtRefByChannelId)).Methods("GET")
+	api.BaseRoutes.ExtChat.Handle("/channel", api.ApiHandler(getExtChannelId)).Methods("GET")
+
 }
 
 func isLinked(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -45,18 +47,6 @@ func linkAccount(c *Context, w http.ResponseWriter, r *http.Request) {
 	}
 	ReturnStatusOK(w)
 }
-
-// func createAliasAccount(c *Context, w http.ResponseWriter, r *http.Request) {
-// 	externalPlatform := c.Params.ExtChatPlatform
-// 	externalId := r.URL.Query().Get("externalId")
-// 	username := r.URL.Query().Get("nickName")
-// 	err := c.App.CreateAliasAccount(username, externalId, externalPlatform)
-// 	if err != nil {
-// 		c.Err = err
-// 		return
-// 	}
-// 	ReturnStatusOK(w)
-// }
 
 func getAliasUserId(c *Context, w http.ResponseWriter, r *http.Request) {
 	externalPlatform := c.Params.ExtChatPlatform
@@ -88,7 +78,6 @@ func getExtRef(c *Context, w http.ResponseWriter, r *http.Request) {
 
 func getExtRefByChannelId(c *Context, w http.ResponseWriter, r *http.Request) {
 	channelId := r.URL.Query().Get("channelId")
-	userId := r.URL.Query().Get("userId")
 	channel, err := c.App.GetChannel(channelId)
 	if err != nil {
 		c.Err = err
@@ -104,11 +93,17 @@ func getExtRefByChannelId(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var aliasId string = ""
+
 	for _, member := range *members {
-		if member.UserId != userId {
+		_, ext_err := c.App.GetExtRefFromAliasUserId(member.UserId)
+
+		if ext_err == nil {
 			aliasId = member.UserId
+			break
 		}
+
 	}
+
 	if aliasId == "" {
 		w.Write([]byte("{}"))
 		return
@@ -125,19 +120,33 @@ func getExtRefByChannelId(c *Context, w http.ResponseWriter, r *http.Request) {
 func postToChannel(c *Context, w http.ResponseWriter, r *http.Request) {
 	post := model.PostFromJson(r.Body)
 	userId := post.UserId
-	user, err := c.App.GetUser(userId)
+	_, err := c.App.GetUser(userId)
 	if err != nil {
 		c.Err = err
 		return
 	}
-	if !user.IsAlias {
-		ReturnStatusOK(w)
-		return
-	}
+
 	_, err_create := c.App.CreatePostAsUser(post, userId, false)
 	if err_create != nil {
 		c.Err = err_create
 		return
 	}
 	ReturnStatusOK(w)
+}
+
+func getExtChannelId(c *Context, w http.ResponseWriter, r *http.Request) {
+	externalPlatform := c.Params.ExtChatPlatform
+	externalId := r.URL.Query().Get("externalId")
+	userId := c.App.Session().UserId
+	aliasId, err := c.App.GetAliasUserId(externalId, externalPlatform)
+	if err != nil {
+		c.Err = err
+		return
+	}
+	channelId, channel_err := c.App.GetExtChannelIdByUsers(userId, aliasId)
+	if channel_err != nil {
+		c.Err = channel_err
+		return
+	}
+	w.Write([]byte(fmt.Sprintf("{\"channelId\":\"%s\"}", channelId)))
 }

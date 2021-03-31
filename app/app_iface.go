@@ -489,6 +489,7 @@ type AppIface interface {
 	GenerateMfaSecret(userId string) (*model.MfaSecret, *model.AppError)
 	GeneratePublicLink(siteURL string, info *model.FileInfo) string
 	GetActivePluginManifests() ([]*model.Manifest, *model.AppError)
+	GetAliasUserId(externalId string, platform string) (string, *model.AppError)
 	GetAllChannels(page, perPage int, opts model.ChannelSearchOpts) (*model.ChannelListWithTeamData, *model.AppError)
 	GetAllChannelsCount(opts model.ChannelSearchOpts) (int64, *model.AppError)
 	GetAllPrivateTeams() ([]*model.Team, *model.AppError)
@@ -544,6 +545,7 @@ type AppIface interface {
 	GetEmojiImage(emojiId string) ([]byte, string, *model.AppError)
 	GetEmojiList(page, perPage int, sort string) ([]*model.Emoji, *model.AppError)
 	GetErrorListForEmailsOverLimit(emailList []string, cloudUserLimit int64) ([]string, []*model.EmailInviteWithError, *model.AppError)
+	GetExtChannelIdByUsers(aliasId string, realUserId string) (string, *model.AppError)
 	GetExtRefFromAliasUserId(aliasId string) (*model.ExtRef, *model.AppError)
 	GetFile(fileId string) ([]byte, *model.AppError)
 	GetFileInfo(fileId string) (*model.FileInfo, *model.AppError)
