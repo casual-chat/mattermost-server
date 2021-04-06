@@ -24,31 +24,6 @@ func (a *App) LinkAccount(extRef *model.ExtRef) *model.AppError {
 	return nil
 }
 
-// func (a *App) CreateAliasAccount(userName string, externalId string, platform string) *model.AppError {
-// 	userModel := &model.User{Email: "",
-// 		Nickname: userName,
-// 		Password: "",
-// 		Username: userName,
-// 		IsAlias:  true, //this is a computed field
-// 	}
-// 	user, err := a.Srv().Store.User().Save(userModel)
-// 	if err != nil {
-// 		return model.NewAppError("CreateAlias", "app.ext_ref.create_alias.internal_error", nil, err.Error(), http.StatusInternalServerError)
-// 	}
-// 	ext_ref := &model.ExtRef{
-// 		RealUserId:       "",
-// 		ExternalId:       externalId,
-// 		ExternalPlatform: platform,
-// 		AliasUserId:      user.Id,
-// 	}
-// 	_, extRefErr := a.Srv().Store.ExtRef().Save(ext_ref)
-// 	if extRefErr != nil {
-// 		return model.NewAppError("CreateAlias", "app.ext_ref.save_ext_ref.internal_error", nil, err.Error(), http.StatusInternalServerError)
-// 	}
-
-// 	return nil
-// }
-
 func (a *App) GetOrCreateAliasUserId(userName string, externalId string, platform string) (string, *model.AppError) {
 	ext_ref, err := a.Srv().Store.ExtRef().GetByExtIdAndPlatform(externalId, platform)
 	if err != nil {
@@ -58,7 +33,6 @@ func (a *App) GetOrCreateAliasUserId(userName string, externalId string, platfor
 			ExternalPlatform: platform,
 			AliasUserId:      "",
 		}
-		//return "", model.NewAppError("GetAlias", "app.ext_ref.get_alias.internal_error", nil, err.Error(), http.StatusInternalServerError)
 	}
 	if ext_ref.AliasUserId != "" {
 		return ext_ref.AliasUserId, nil
@@ -85,10 +59,26 @@ func (a *App) GetOrCreateAliasUserId(userName string, externalId string, platfor
 	return user.Id, nil
 }
 
+func (a *App) GetAliasUserId(externalId string, platform string) (string, *model.AppError) {
+	ext_ref, err := a.Srv().Store.ExtRef().GetByExtIdAndPlatform(externalId, platform)
+	if err != nil {
+		return "", model.NewAppError("GetAlias", "app.ext_ref.get_alias.internal_error", nil, err.Error(), http.StatusInternalServerError)
+	}
+	return ext_ref.AliasUserId, nil
+}
+
 func (a *App) GetExtRefFromAliasUserId(aliasId string) (*model.ExtRef, *model.AppError) {
 	ext_ref, err := a.Srv().Store.ExtRef().GetByAliasUserId(aliasId)
 	if err != nil {
 		return nil, model.NewAppError("GetAlias", "app.ext_ref.get_alias.internal_error", nil, err.Error(), http.StatusInternalServerError)
 	}
 	return ext_ref, nil
+}
+
+func (a *App) GetExtChannelIdByUsers(aliasId string, realUserId string) (string, *model.AppError) {
+	channelId, err := a.Srv().Store.Channel().GetChannelByTwoUsers(aliasId, realUserId)
+	if err != nil {
+		return "", model.NewAppError("GetExtChannelIdByUsers", "app.ext_ref.get_ext_channel.internal_error", nil, err.Error(), http.StatusInternalServerError)
+	}
+	return channelId, nil
 }
