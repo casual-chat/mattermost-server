@@ -838,6 +838,12 @@ func (s *RetryLayerChannelStore) GetByNames(team_id string, names []string, allo
 
 }
 
+func (s *RetryLayerChannelStore) GetChannelByTwoUsers(userId1 string, userId2 string) (string, *model.AppError) {
+
+	return s.ChannelStore.GetChannelByTwoUsers(userId1, userId2)
+
+}
+
 func (s *RetryLayerChannelStore) GetChannelCounts(teamId string, userId string) (*model.ChannelCounts, *model.AppError) {
 
 	return s.ChannelStore.GetChannelCounts(teamId, userId)

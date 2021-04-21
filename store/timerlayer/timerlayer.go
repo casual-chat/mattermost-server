@@ -897,6 +897,22 @@ func (s *TimerLayerChannelStore) GetByNames(team_id string, names []string, allo
 	return result, err
 }
 
+func (s *TimerLayerChannelStore) GetChannelByTwoUsers(userId1 string, userId2 string) (string, *model.AppError) {
+	start := timemodule.Now()
+
+	result, err := s.ChannelStore.GetChannelByTwoUsers(userId1, userId2)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("ChannelStore.GetChannelByTwoUsers", success, elapsed)
+	}
+	return result, err
+}
+
 func (s *TimerLayerChannelStore) GetChannelCounts(teamId string, userId string) (*model.ChannelCounts, *model.AppError) {
 	start := timemodule.Now()
 
