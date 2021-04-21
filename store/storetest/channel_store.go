@@ -40,7 +40,7 @@ func TestChannelStore(t *testing.T, ss store.Store, s SqlSupplier) {
 
 	// t.Run("Save", func(t *testing.T) { testChannelStoreSave(t, ss) })
 	t.Run("GetChannelByTwoUsers", func(t *testing.T) { testGetChannelByTwoUsers(t, ss) })
-	
+
 	// t.Run("SaveDirectChannel", func(t *testing.T) { testChannelStoreSaveDirectChannel(t, ss, s) })
 	// t.Run("CreateDirectChannel", func(t *testing.T) { testChannelStoreCreateDirectChannel(t, ss) })
 	// t.Run("Update", func(t *testing.T) { testChannelStoreUpdate(t, ss) })
@@ -362,7 +362,7 @@ func testGetChannelUnread(t *testing.T, ss store.Store) {
 	require.EqualValues(t, 10, ch2.MsgCount, "wrong MsgCount for channel 2")
 }
 
-func testGetChannelByTwoUsers(t *testing.T, ss store.Store){
+func testGetChannelByTwoUsers(t *testing.T, ss store.Store) {
 	o1 := model.Channel{}
 	o1.TeamId = model.NewId()
 	o1.DisplayName = "Name"
@@ -406,7 +406,7 @@ func testGetChannelByTwoUsers(t *testing.T, ss store.Store){
 	_, nErr = ss.Channel().SaveDirectChannel(&o2, &m1, &m2)
 	require.Nil(t, nErr)
 
-	c2, err := ss.Channel().GetChannelByTwoUsers(u1.Id,u2.Id)
+	c2, err := ss.Channel().GetChannelByTwoUsers(u1.Id, u2.Id)
 	require.Nil(t, err, err)
 	require.Equal(t, o2.Id, c2, "invalid returned channel")
 
