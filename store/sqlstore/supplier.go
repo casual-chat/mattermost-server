@@ -91,6 +91,7 @@ type SqlSupplierStores struct {
 	emoji                store.EmojiStore
 	emojiAccess          store.EmojiAccessStore
 	publicEmoji          store.PublicEmojiStore
+	friendRequest		 store.FriendRequestStore
 	status               store.StatusStore
 	fileInfo             store.FileInfoStore
 	reaction             store.ReactionStore
@@ -163,6 +164,7 @@ func NewSqlSupplier(settings model.SqlSettings, metrics einterfaces.MetricsInter
 	supplier.stores.emoji = newSqlEmojiStore(supplier, metrics)
 	supplier.stores.emojiAccess = newSqlEmojiAccessStore(supplier, metrics)
 	supplier.stores.publicEmoji = newSqlPublicEmojiStore(supplier, metrics)
+	supplier.stores.friendRequest = newSqlFriendRequestStore(supplier, metrics)
 	supplier.stores.status = newSqlStatusStore(supplier)
 	supplier.stores.fileInfo = newSqlFileInfoStore(supplier, metrics)
 	supplier.stores.job = newSqlJobStore(supplier)
@@ -212,6 +214,7 @@ func NewSqlSupplier(settings model.SqlSettings, metrics einterfaces.MetricsInter
 	supplier.stores.emoji.(*SqlEmojiStore).createIndexesIfNotExists()
 	supplier.stores.emojiAccess.(*SqlEmojiAccessStore).createIndexesIfNotExists()
 	supplier.stores.publicEmoji.(*SqlPublicEmojiStore).createIndexesIfNotExists()
+	supplier.stores.friendRequest.(*SqlFriendRequestStore).createIndexesIfNotExists()
 	supplier.stores.status.(*SqlStatusStore).createIndexesIfNotExists()
 	supplier.stores.fileInfo.(*SqlFileInfoStore).createIndexesIfNotExists()
 	supplier.stores.job.(*SqlJobStore).createIndexesIfNotExists()
@@ -1146,6 +1149,10 @@ func (ss *SqlSupplier) EmojiAccess() store.EmojiAccessStore {
 func (ss *SqlSupplier) PublicEmoji() store.PublicEmojiStore {
 	return ss.stores.publicEmoji
 }
+
+func (ss *SqlSupplier) FriendRequest() store.FriendRequestStore {
+	return ss.stores.friendRequest
+} 
 
 func (ss *SqlSupplier) Status() store.StatusStore {
 	return ss.stores.status

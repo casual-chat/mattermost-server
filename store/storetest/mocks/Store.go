@@ -254,6 +254,22 @@ func (_m *Store) FileInfo() store.FileInfoStore {
 	return r0
 }
 
+// FriendRequest provides a mock function with given fields:
+func (_m *Store) FriendRequest() store.FriendRequestStore {
+	ret := _m.Called()
+
+	var r0 store.FriendRequestStore
+	if rf, ok := ret.Get(0).(func() store.FriendRequestStore); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(store.FriendRequestStore)
+		}
+	}
+
+	return r0
+}
+
 // GetCurrentSchemaVersion provides a mock function with given fields:
 func (_m *Store) GetCurrentSchemaVersion() string {
 	ret := _m.Called()

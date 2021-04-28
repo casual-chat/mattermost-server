@@ -22,6 +22,7 @@ type StoreResult struct {
 
 type Store interface {
 	ExtRef() ExtRefStore
+	FriendRequest() FriendRequestStore
 	Secret() SecretStore
 	Team() TeamStore
 	Channel() ChannelStore
@@ -79,6 +80,19 @@ type ExtRefStore interface {
 	Unlink(realUserId string, externalPlatform string) error
 	Save(ext_ref *model.ExtRef) (*model.ExtRef, error)
 	GetByAliasUserId(aliasUserId string) (*model.ExtRef, error)
+}
+
+type FriendRequestStore interface{
+	//Save
+	Save(request *model.FriendRequest) (*model.FriendRequest, error) 
+	FindFriendRequest(senderId string, receiverId string) (*model.FriendRequest, error)
+	// HasPendingRequest(senderId string, receiverId string) bool
+	RemoveRequest(senderId string, receiverId string) error
+	AcceptRequest(senderId string, receiverId string) error
+
+	GetPendingList(senderId string) ([]*model.FriendRequest, error)
+	GetReceivedList(receiverId string) ([]*model.FriendRequest, error)
+	GetFriendList(userid string) ([]*model.FriendRequest, error) 
 }
 
 type SecretStore interface {

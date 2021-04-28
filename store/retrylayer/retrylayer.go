@@ -32,6 +32,7 @@ type RetryLayer struct {
 	EmojiAccessStore          store.EmojiAccessStore
 	ExtRefStore               store.ExtRefStore
 	FileInfoStore             store.FileInfoStore
+	FriendRequestStore        store.FriendRequestStore
 	GroupStore                store.GroupStore
 	JobStore                  store.JobStore
 	LicenseStore              store.LicenseStore
@@ -103,6 +104,10 @@ func (s *RetryLayer) ExtRef() store.ExtRefStore {
 
 func (s *RetryLayer) FileInfo() store.FileInfoStore {
 	return s.FileInfoStore
+}
+
+func (s *RetryLayer) FriendRequest() store.FriendRequestStore {
+	return s.FriendRequestStore
 }
 
 func (s *RetryLayer) Group() store.GroupStore {
@@ -254,6 +259,11 @@ type RetryLayerExtRefStore struct {
 
 type RetryLayerFileInfoStore struct {
 	store.FileInfoStore
+	Root *RetryLayer
+}
+
+type RetryLayerFriendRequestStore struct {
+	store.FriendRequestStore
 	Root *RetryLayer
 }
 
@@ -835,6 +845,12 @@ func (s *RetryLayerChannelStore) GetByNames(team_id string, names []string, allo
 			return result, err
 		}
 	}
+
+}
+
+func (s *RetryLayerChannelStore) GetChannelByTwoUsers(userId1 string, userId2 string) (string, *model.AppError) {
+
+	return s.ChannelStore.GetChannelByTwoUsers(userId1, userId2)
 
 }
 
@@ -2627,6 +2643,146 @@ func (s *RetryLayerFileInfoStore) Save(info *model.FileInfo) (*model.FileInfo, e
 	tries := 0
 	for {
 		result, err := s.FileInfoStore.Save(info)
+		if err == nil {
+			return result, nil
+		}
+		if !isRepeatableError(err) {
+			return result, err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return result, err
+		}
+	}
+
+}
+
+func (s *RetryLayerFriendRequestStore) AcceptRequest(senderId string, receiverId string) error {
+
+	tries := 0
+	for {
+		err := s.FriendRequestStore.AcceptRequest(senderId, receiverId)
+		if err == nil {
+			return nil
+		}
+		if !isRepeatableError(err) {
+			return err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return err
+		}
+	}
+
+}
+
+func (s *RetryLayerFriendRequestStore) FindFriendRequest(senderId string, receiverId string) (*model.FriendRequest, error) {
+
+	tries := 0
+	for {
+		result, err := s.FriendRequestStore.FindFriendRequest(senderId, receiverId)
+		if err == nil {
+			return result, nil
+		}
+		if !isRepeatableError(err) {
+			return result, err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return result, err
+		}
+	}
+
+}
+
+func (s *RetryLayerFriendRequestStore) GetFriendList(userid string) ([]*model.FriendRequest, error) {
+
+	tries := 0
+	for {
+		result, err := s.FriendRequestStore.GetFriendList(userid)
+		if err == nil {
+			return result, nil
+		}
+		if !isRepeatableError(err) {
+			return result, err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return result, err
+		}
+	}
+
+}
+
+func (s *RetryLayerFriendRequestStore) GetPendingList(senderId string) ([]*model.FriendRequest, error) {
+
+	tries := 0
+	for {
+		result, err := s.FriendRequestStore.GetPendingList(senderId)
+		if err == nil {
+			return result, nil
+		}
+		if !isRepeatableError(err) {
+			return result, err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return result, err
+		}
+	}
+
+}
+
+func (s *RetryLayerFriendRequestStore) GetReceivedList(receiverId string) ([]*model.FriendRequest, error) {
+
+	tries := 0
+	for {
+		result, err := s.FriendRequestStore.GetReceivedList(receiverId)
+		if err == nil {
+			return result, nil
+		}
+		if !isRepeatableError(err) {
+			return result, err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return result, err
+		}
+	}
+
+}
+
+func (s *RetryLayerFriendRequestStore) RemoveRequest(senderId string, receiverId string) error {
+
+	tries := 0
+	for {
+		err := s.FriendRequestStore.RemoveRequest(senderId, receiverId)
+		if err == nil {
+			return nil
+		}
+		if !isRepeatableError(err) {
+			return err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return err
+		}
+	}
+
+}
+
+func (s *RetryLayerFriendRequestStore) Save(request *model.FriendRequest) (*model.FriendRequest, error) {
+
+	tries := 0
+	for {
+		result, err := s.FriendRequestStore.Save(request)
 		if err == nil {
 			return result, nil
 		}
@@ -7175,6 +7331,7 @@ func New(childStore store.Store) *RetryLayer {
 	newStore.EmojiAccessStore = &RetryLayerEmojiAccessStore{EmojiAccessStore: childStore.EmojiAccess(), Root: &newStore}
 	newStore.ExtRefStore = &RetryLayerExtRefStore{ExtRefStore: childStore.ExtRef(), Root: &newStore}
 	newStore.FileInfoStore = &RetryLayerFileInfoStore{FileInfoStore: childStore.FileInfo(), Root: &newStore}
+	newStore.FriendRequestStore = &RetryLayerFriendRequestStore{FriendRequestStore: childStore.FriendRequest(), Root: &newStore}
 	newStore.GroupStore = &RetryLayerGroupStore{GroupStore: childStore.Group(), Root: &newStore}
 	newStore.JobStore = &RetryLayerJobStore{JobStore: childStore.Job(), Root: &newStore}
 	newStore.LicenseStore = &RetryLayerLicenseStore{LicenseStore: childStore.License(), Root: &newStore}
