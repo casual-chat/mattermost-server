@@ -118,6 +118,7 @@ type Routes struct {
 	Groups         *mux.Router // 'api/v4/groups'
 
 	ExtChat *mux.Router // 'api/v4/extchat/{extchat_platform:[A-Za-z0-9]+}'
+	FriendRequest *mux.Router // 'api/v4/friends'
 }
 
 type API struct {
@@ -224,6 +225,7 @@ func Init(configservice configservice.ConfigService, globalOptionsFunc app.AppOp
 	api.BaseRoutes.Groups = api.BaseRoutes.ApiRoot.PathPrefix("/groups").Subrouter()
 
 	api.BaseRoutes.ExtChat = api.BaseRoutes.ApiRoot.PathPrefix("/extchat/{extchat_platform:[A-Za-z0-9]+}").Subrouter()
+	api.BaseRoutes.FriendRequest = api.BaseRoutes.ApiRoot.PathPrefix("/friends").Subrouter()
 
 	api.InitUser()
 	api.InitBot()
@@ -261,6 +263,7 @@ func Init(configservice configservice.ConfigService, globalOptionsFunc app.AppOp
 	api.InitAction()
 
 	api.InitExtChat()
+	api.InitFriendRequest()
 
 	root.Handle("/api/v4/{anything:.*}", http.HandlerFunc(api.Handle404))
 

@@ -4737,6 +4737,56 @@ func (c *Client4) LinkAccount(externalId string, externalPlatform string) (bool,
 	return CheckStatusOK(r), BuildResponse(r)
 }
 
+func (c *Client4) SendFriendRequest(senderid string, receiverid string) (bool, *Response) {
+	query := fmt.Sprintf("?senderid=%v&receiverid=%v", senderid, receiverid)
+	r, apErr := c.DoApiPost("/friends"+query, "")
+	if apErr != nil {
+		return false, BuildErrorResponse(r, apErr)
+	}
+	defer closeBody(r)
+	return CheckStatusOK(r), BuildResponse(r)
+}
+
+func (c *Client4) AcceptFriendRequest(senderid string, receiverid string) (bool, *Response) {
+	query := fmt.Sprintf("?senderid=%v&receiverid=%v", senderid, receiverid)
+	r, apErr := c.DoApiPost("/friends/accept"+query, "")
+	if apErr != nil {
+		return false, BuildErrorResponse(r, apErr)
+	}
+	defer closeBody(r)
+	return CheckStatusOK(r), BuildResponse(r)
+}
+
+func (c *Client4) RejectFriendRequest(senderid string, receiverid string) (bool, *Response) {
+	query := fmt.Sprintf("?senderid=%v&receiverid=%v", senderid, receiverid)
+	r, apErr := c.DoApiPost("/friends/reject"+query, "")
+	if apErr != nil {
+		return false, BuildErrorResponse(r, apErr)
+	}
+	defer closeBody(r)
+	return CheckStatusOK(r), BuildResponse(r)
+}
+
+func (c *Client4) GetReceviedList(receiverid string) ([]*FriendRequest, *Response){
+	query := fmt.Sprintf("?receiverid=%v", receiverid)
+	r, apErr := c.DoApiGet("/friends/receive"+query, "")
+	if apErr != nil {
+		return nil, BuildErrorResponse(r, apErr)
+	}
+	defer closeBody(r)
+	return FriendRequestFromJson(r.Body), BuildResponse(r)
+}
+
+func (c *Client4) GetFriendList(receiverid string) ([]*FriendRequest, *Response){
+	query := fmt.Sprintf("?receiverid=%v", receiverid)
+	r, apErr := c.DoApiGet("/friends/friendslist"+query, "")
+	if apErr != nil {
+		return nil, BuildErrorResponse(r, apErr)
+	}
+	defer closeBody(r)
+	return FriendRequestFromJson(r.Body), BuildResponse(r)
+}
+
 func (c *Client4) SavePrivateEmoji(emojiId string, userId string) (bool, *Response) {
 	query := fmt.Sprintf("?userid=%v", userId)
 	r, apErr := c.DoApiPost(c.GetEmojiRoute(emojiId)+"/save"+query, "")

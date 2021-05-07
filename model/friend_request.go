@@ -32,8 +32,13 @@ func (friend_request *FriendRequest) ToJson() string {
 	return string(b)
 }
 
-func FriendRequestFromJson(data io.Reader) *FriendRequest {
-	var friend_request *FriendRequest
+func FriendRequestToJson(friend_request []*FriendRequest) string {
+	b, _ := json.Marshal(friend_request)
+	return string(b)
+}
+
+func FriendRequestFromJson(data io.Reader) []*FriendRequest {
+	var friend_request []*FriendRequest
 	json.NewDecoder(data).Decode(&friend_request)
 	return friend_request
 }
