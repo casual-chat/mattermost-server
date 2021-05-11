@@ -30,6 +30,7 @@ type TimerLayer struct {
 	EmojiAccessStore          store.EmojiAccessStore
 	ExtRefStore               store.ExtRefStore
 	FileInfoStore             store.FileInfoStore
+	FriendRequestStore        store.FriendRequestStore
 	GroupStore                store.GroupStore
 	JobStore                  store.JobStore
 	LicenseStore              store.LicenseStore
@@ -101,6 +102,10 @@ func (s *TimerLayer) ExtRef() store.ExtRefStore {
 
 func (s *TimerLayer) FileInfo() store.FileInfoStore {
 	return s.FileInfoStore
+}
+
+func (s *TimerLayer) FriendRequest() store.FriendRequestStore {
+	return s.FriendRequestStore
 }
 
 func (s *TimerLayer) Group() store.GroupStore {
@@ -252,6 +257,11 @@ type TimerLayerExtRefStore struct {
 
 type TimerLayerFileInfoStore struct {
 	store.FileInfoStore
+	Root *TimerLayer
+}
+
+type TimerLayerFriendRequestStore struct {
+	store.FriendRequestStore
 	Root *TimerLayer
 }
 
@@ -893,6 +903,22 @@ func (s *TimerLayerChannelStore) GetByNames(team_id string, names []string, allo
 			success = "true"
 		}
 		s.Root.Metrics.ObserveStoreMethodDuration("ChannelStore.GetByNames", success, elapsed)
+	}
+	return result, err
+}
+
+func (s *TimerLayerChannelStore) GetChannelByTwoUsers(userId1 string, userId2 string) (string, *model.AppError) {
+	start := timemodule.Now()
+
+	result, err := s.ChannelStore.GetChannelByTwoUsers(userId1, userId2)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("ChannelStore.GetChannelByTwoUsers", success, elapsed)
 	}
 	return result, err
 }
@@ -3043,6 +3069,118 @@ func (s *TimerLayerFileInfoStore) Save(info *model.FileInfo) (*model.FileInfo, e
 			success = "true"
 		}
 		s.Root.Metrics.ObserveStoreMethodDuration("FileInfoStore.Save", success, elapsed)
+	}
+	return result, err
+}
+
+func (s *TimerLayerFriendRequestStore) AcceptRequest(senderId string, receiverId string) error {
+	start := timemodule.Now()
+
+	err := s.FriendRequestStore.AcceptRequest(senderId, receiverId)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("FriendRequestStore.AcceptRequest", success, elapsed)
+	}
+	return err
+}
+
+func (s *TimerLayerFriendRequestStore) FindFriendRequest(senderId string, receiverId string) (*model.FriendRequest, error) {
+	start := timemodule.Now()
+
+	result, err := s.FriendRequestStore.FindFriendRequest(senderId, receiverId)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("FriendRequestStore.FindFriendRequest", success, elapsed)
+	}
+	return result, err
+}
+
+func (s *TimerLayerFriendRequestStore) GetFriendList(userid string) ([]*model.FriendRequest, error) {
+	start := timemodule.Now()
+
+	result, err := s.FriendRequestStore.GetFriendList(userid)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("FriendRequestStore.GetFriendList", success, elapsed)
+	}
+	return result, err
+}
+
+func (s *TimerLayerFriendRequestStore) GetPendingList(senderId string) ([]*model.FriendRequest, error) {
+	start := timemodule.Now()
+
+	result, err := s.FriendRequestStore.GetPendingList(senderId)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("FriendRequestStore.GetPendingList", success, elapsed)
+	}
+	return result, err
+}
+
+func (s *TimerLayerFriendRequestStore) GetReceivedList(receiverId string) ([]*model.FriendRequest, error) {
+	start := timemodule.Now()
+
+	result, err := s.FriendRequestStore.GetReceivedList(receiverId)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("FriendRequestStore.GetReceivedList", success, elapsed)
+	}
+	return result, err
+}
+
+func (s *TimerLayerFriendRequestStore) RemoveRequest(senderId string, receiverId string) error {
+	start := timemodule.Now()
+
+	err := s.FriendRequestStore.RemoveRequest(senderId, receiverId)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("FriendRequestStore.RemoveRequest", success, elapsed)
+	}
+	return err
+}
+
+func (s *TimerLayerFriendRequestStore) Save(request *model.FriendRequest) (*model.FriendRequest, error) {
+	start := timemodule.Now()
+
+	result, err := s.FriendRequestStore.Save(request)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("FriendRequestStore.Save", success, elapsed)
 	}
 	return result, err
 }
@@ -8869,6 +9007,7 @@ func New(childStore store.Store, metrics einterfaces.MetricsInterface) *TimerLay
 	newStore.EmojiAccessStore = &TimerLayerEmojiAccessStore{EmojiAccessStore: childStore.EmojiAccess(), Root: &newStore}
 	newStore.ExtRefStore = &TimerLayerExtRefStore{ExtRefStore: childStore.ExtRef(), Root: &newStore}
 	newStore.FileInfoStore = &TimerLayerFileInfoStore{FileInfoStore: childStore.FileInfo(), Root: &newStore}
+	newStore.FriendRequestStore = &TimerLayerFriendRequestStore{FriendRequestStore: childStore.FriendRequest(), Root: &newStore}
 	newStore.GroupStore = &TimerLayerGroupStore{GroupStore: childStore.Group(), Root: &newStore}
 	newStore.JobStore = &TimerLayerJobStore{JobStore: childStore.Job(), Root: &newStore}
 	newStore.LicenseStore = &TimerLayerLicenseStore{LicenseStore: childStore.License(), Root: &newStore}

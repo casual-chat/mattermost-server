@@ -395,6 +395,22 @@ func (_m *SqlStore) FileInfo() store.FileInfoStore {
 	return r0
 }
 
+// FriendRequest provides a mock function with given fields:
+func (_m *SqlStore) FriendRequest() store.FriendRequestStore {
+	ret := _m.Called()
+
+	var r0 store.FriendRequestStore
+	if rf, ok := ret.Get(0).(func() store.FriendRequestStore); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(store.FriendRequestStore)
+		}
+	}
+
+	return r0
+}
+
 // GetAllConns provides a mock function with given fields:
 func (_m *SqlStore) GetAllConns() []*gorp.DbMap {
 	ret := _m.Called()

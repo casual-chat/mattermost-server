@@ -30,6 +30,7 @@ type OpenTracingLayer struct {
 	EmojiAccessStore          store.EmojiAccessStore
 	ExtRefStore               store.ExtRefStore
 	FileInfoStore             store.FileInfoStore
+	FriendRequestStore        store.FriendRequestStore
 	GroupStore                store.GroupStore
 	JobStore                  store.JobStore
 	LicenseStore              store.LicenseStore
@@ -101,6 +102,10 @@ func (s *OpenTracingLayer) ExtRef() store.ExtRefStore {
 
 func (s *OpenTracingLayer) FileInfo() store.FileInfoStore {
 	return s.FileInfoStore
+}
+
+func (s *OpenTracingLayer) FriendRequest() store.FriendRequestStore {
+	return s.FriendRequestStore
 }
 
 func (s *OpenTracingLayer) Group() store.GroupStore {
@@ -252,6 +257,11 @@ type OpenTracingLayerExtRefStore struct {
 
 type OpenTracingLayerFileInfoStore struct {
 	store.FileInfoStore
+	Root *OpenTracingLayer
+}
+
+type OpenTracingLayerFriendRequestStore struct {
+	store.FriendRequestStore
 	Root *OpenTracingLayer
 }
 
@@ -951,6 +961,24 @@ func (s *OpenTracingLayerChannelStore) GetByNames(team_id string, names []string
 
 	defer span.Finish()
 	result, err := s.ChannelStore.GetByNames(team_id, names, allowFromCache)
+	if err != nil {
+		span.LogFields(spanlog.Error(err))
+		ext.Error.Set(span, true)
+	}
+
+	return result, err
+}
+
+func (s *OpenTracingLayerChannelStore) GetChannelByTwoUsers(userId1 string, userId2 string) (string, *model.AppError) {
+	origCtx := s.Root.Store.Context()
+	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "ChannelStore.GetChannelByTwoUsers")
+	s.Root.Store.SetContext(newCtx)
+	defer func() {
+		s.Root.Store.SetContext(origCtx)
+	}()
+
+	defer span.Finish()
+	result, err := s.ChannelStore.GetChannelByTwoUsers(userId1, userId2)
 	if err != nil {
 		span.LogFields(spanlog.Error(err))
 		ext.Error.Set(span, true)
@@ -3321,6 +3349,132 @@ func (s *OpenTracingLayerFileInfoStore) Save(info *model.FileInfo) (*model.FileI
 
 	defer span.Finish()
 	result, err := s.FileInfoStore.Save(info)
+	if err != nil {
+		span.LogFields(spanlog.Error(err))
+		ext.Error.Set(span, true)
+	}
+
+	return result, err
+}
+
+func (s *OpenTracingLayerFriendRequestStore) AcceptRequest(senderId string, receiverId string) error {
+	origCtx := s.Root.Store.Context()
+	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "FriendRequestStore.AcceptRequest")
+	s.Root.Store.SetContext(newCtx)
+	defer func() {
+		s.Root.Store.SetContext(origCtx)
+	}()
+
+	defer span.Finish()
+	err := s.FriendRequestStore.AcceptRequest(senderId, receiverId)
+	if err != nil {
+		span.LogFields(spanlog.Error(err))
+		ext.Error.Set(span, true)
+	}
+
+	return err
+}
+
+func (s *OpenTracingLayerFriendRequestStore) FindFriendRequest(senderId string, receiverId string) (*model.FriendRequest, error) {
+	origCtx := s.Root.Store.Context()
+	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "FriendRequestStore.FindFriendRequest")
+	s.Root.Store.SetContext(newCtx)
+	defer func() {
+		s.Root.Store.SetContext(origCtx)
+	}()
+
+	defer span.Finish()
+	result, err := s.FriendRequestStore.FindFriendRequest(senderId, receiverId)
+	if err != nil {
+		span.LogFields(spanlog.Error(err))
+		ext.Error.Set(span, true)
+	}
+
+	return result, err
+}
+
+func (s *OpenTracingLayerFriendRequestStore) GetFriendList(userid string) ([]*model.FriendRequest, error) {
+	origCtx := s.Root.Store.Context()
+	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "FriendRequestStore.GetFriendList")
+	s.Root.Store.SetContext(newCtx)
+	defer func() {
+		s.Root.Store.SetContext(origCtx)
+	}()
+
+	defer span.Finish()
+	result, err := s.FriendRequestStore.GetFriendList(userid)
+	if err != nil {
+		span.LogFields(spanlog.Error(err))
+		ext.Error.Set(span, true)
+	}
+
+	return result, err
+}
+
+func (s *OpenTracingLayerFriendRequestStore) GetPendingList(senderId string) ([]*model.FriendRequest, error) {
+	origCtx := s.Root.Store.Context()
+	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "FriendRequestStore.GetPendingList")
+	s.Root.Store.SetContext(newCtx)
+	defer func() {
+		s.Root.Store.SetContext(origCtx)
+	}()
+
+	defer span.Finish()
+	result, err := s.FriendRequestStore.GetPendingList(senderId)
+	if err != nil {
+		span.LogFields(spanlog.Error(err))
+		ext.Error.Set(span, true)
+	}
+
+	return result, err
+}
+
+func (s *OpenTracingLayerFriendRequestStore) GetReceivedList(receiverId string) ([]*model.FriendRequest, error) {
+	origCtx := s.Root.Store.Context()
+	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "FriendRequestStore.GetReceivedList")
+	s.Root.Store.SetContext(newCtx)
+	defer func() {
+		s.Root.Store.SetContext(origCtx)
+	}()
+
+	defer span.Finish()
+	result, err := s.FriendRequestStore.GetReceivedList(receiverId)
+	if err != nil {
+		span.LogFields(spanlog.Error(err))
+		ext.Error.Set(span, true)
+	}
+
+	return result, err
+}
+
+func (s *OpenTracingLayerFriendRequestStore) RemoveRequest(senderId string, receiverId string) error {
+	origCtx := s.Root.Store.Context()
+	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "FriendRequestStore.RemoveRequest")
+	s.Root.Store.SetContext(newCtx)
+	defer func() {
+		s.Root.Store.SetContext(origCtx)
+	}()
+
+	defer span.Finish()
+	err := s.FriendRequestStore.RemoveRequest(senderId, receiverId)
+	if err != nil {
+		span.LogFields(spanlog.Error(err))
+		ext.Error.Set(span, true)
+	}
+
+	return err
+}
+
+func (s *OpenTracingLayerFriendRequestStore) Save(request *model.FriendRequest) (*model.FriendRequest, error) {
+	origCtx := s.Root.Store.Context()
+	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "FriendRequestStore.Save")
+	s.Root.Store.SetContext(newCtx)
+	defer func() {
+		s.Root.Store.SetContext(origCtx)
+	}()
+
+	defer span.Finish()
+	result, err := s.FriendRequestStore.Save(request)
 	if err != nil {
 		span.LogFields(spanlog.Error(err))
 		ext.Error.Set(span, true)
@@ -9802,6 +9956,7 @@ func New(childStore store.Store, ctx context.Context) *OpenTracingLayer {
 	newStore.EmojiAccessStore = &OpenTracingLayerEmojiAccessStore{EmojiAccessStore: childStore.EmojiAccess(), Root: &newStore}
 	newStore.ExtRefStore = &OpenTracingLayerExtRefStore{ExtRefStore: childStore.ExtRef(), Root: &newStore}
 	newStore.FileInfoStore = &OpenTracingLayerFileInfoStore{FileInfoStore: childStore.FileInfo(), Root: &newStore}
+	newStore.FriendRequestStore = &OpenTracingLayerFriendRequestStore{FriendRequestStore: childStore.FriendRequest(), Root: &newStore}
 	newStore.GroupStore = &OpenTracingLayerGroupStore{GroupStore: childStore.Group(), Root: &newStore}
 	newStore.JobStore = &OpenTracingLayerJobStore{JobStore: childStore.Job(), Root: &newStore}
 	newStore.LicenseStore = &OpenTracingLayerLicenseStore{LicenseStore: childStore.License(), Root: &newStore}

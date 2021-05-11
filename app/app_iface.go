@@ -335,6 +335,7 @@ type AppIface interface {
 	VerifyPlugin(plugin, signature io.ReadSeeker) *model.AppError
 	//GetUserStatusesByIds used by apiV4
 	GetUserStatusesByIds(userIds []string) ([]*model.Status, *model.AppError)
+	AcceptFriendRequest(senderid string, receiverid string) *model.AppError
 	AcceptLanguage() string
 	AccountMigration() einterfaces.AccountMigrationInterface
 	ActivateMfa(userId, token string) *model.AppError
@@ -818,6 +819,7 @@ type AppIface interface {
 	RegenerateOAuthAppSecret(app *model.OAuthApp) (*model.OAuthApp, *model.AppError)
 	RegenerateTeamInviteId(teamId string) (*model.Team, *model.AppError)
 	RegisterPluginCommand(pluginId string, command *model.Command) error
+	RejectFriendRequest(senderid string, receiverid string) *model.AppError
 	ReloadConfig() error
 	RemoveAllDeactivatedMembersFromChannel(channel *model.Channel) *model.AppError
 	RemoveConfigListener(id string)
@@ -881,6 +883,7 @@ type AppIface interface {
 	SendAutoResponseIfNecessary(channel *model.Channel, sender *model.User) (bool, *model.AppError)
 	SendEmailVerification(user *model.User, newEmail, redirect string) *model.AppError
 	SendEphemeralPost(userId string, post *model.Post) *model.Post
+	SendFriendRequest(senderid string, receiverid string) *model.AppError
 	SendNotifications(post *model.Post, team *model.Team, channel *model.Channel, sender *model.User, parentPostList *model.PostList, setOnline bool) ([]string, error)
 	SendPasswordReset(email string, siteURL string) (bool, *model.AppError)
 	ServeInterPluginRequest(w http.ResponseWriter, r *http.Request, sourcePluginId, destinationPluginId string)
@@ -927,6 +930,8 @@ type AppIface interface {
 	SetTeamIconFromFile(team *model.Team, file io.Reader) *model.AppError
 	SetTeamIconFromMultiPartFile(teamId string, file multipart.File) *model.AppError
 	SetUserAgent(s string)
+	ShowFriendsList(receiverid string) ([]*model.FriendRequest, *model.AppError)
+	ShowPendingFriendRequest(receiverid string) ([]*model.FriendRequest, *model.AppError)
 	SlackImport(fileData multipart.File, fileSize int64, teamID string) (*model.AppError, *bytes.Buffer)
 	SoftDeleteTeam(teamId string) *model.AppError
 	Srv() *Server
