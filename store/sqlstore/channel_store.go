@@ -556,7 +556,6 @@ func (s SqlChannelStore) Save(channel *model.Channel, maxChannelsPerTeam int64) 
 	return newChannel, err
 }
 
-
 func (s SqlChannelStore) CreateDirectChannel(user *model.User, otherUser *model.User) (*model.Channel, error) {
 	channel := new(model.Channel)
 
@@ -708,7 +707,7 @@ func (s SqlChannelStore) updateChannelT(transaction *gorp.Transaction, channel *
 	return channel, nil
 }
 
-func (s SqlChannelStore) GetChannelByTwoUsers(userId1 string, userId2 string) (string, *model.AppError){
+func (s SqlChannelStore) GetChannelByTwoUsers(userId1 string, userId2 string) (string, *model.AppError) {
 	var channelId string
 	err := s.GetReplica().SelectOne(&channelId,
 		`SELECT
@@ -725,8 +724,8 @@ func (s SqlChannelStore) GetChannelByTwoUsers(userId1 string, userId2 string) (s
 											ChannelMembers
 										WHERE
 											UserId = :UserId2)`,
-			
-				map[string]interface{}{"UserId1": userId1, "UserId2": userId2})
+
+		map[string]interface{}{"UserId1": userId1, "UserId2": userId2})
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return "", model.NewAppError("SqlChannelStore.GetChannelByTwoUsers", "store.sql_channel.get_channel.app_error", nil, "userId="+userId1+" "+err.Error(), http.StatusNotFound)
