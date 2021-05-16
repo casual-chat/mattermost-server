@@ -1,3 +1,6 @@
+// Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
+// See LICENSE.txt for license information.
+
 package storetest
 
 import (
@@ -28,9 +31,9 @@ var testReceiverId = model.NewId()
 
 func testSave(t *testing.T, ss store.Store) {
 	friendRequest := &model.FriendRequest{
-		SenderId:		testSenderId,
-		ReceiverId:		testReceiverId,
-		Status:			"pending",
+		SenderId:   testSenderId,
+		ReceiverId: testReceiverId,
+		Status:     "pending",
 	}
 	result, err := ss.FriendRequest().Save(friendRequest)
 	require.Nil(t, err)
@@ -91,7 +94,6 @@ func testSave(t *testing.T, ss store.Store) {
 	result1, err = ss.FriendRequest().GetFriendList(testReceiverId)
 	require.Nil(t, err)
 	require.Equal(t, len(result1), 0)
-
 
 }
 

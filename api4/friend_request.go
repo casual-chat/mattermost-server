@@ -4,7 +4,6 @@
 package api4
 
 import (
-
 	"net/http"
 
 	"github.com/mattermost/mattermost-server/v5/model"
@@ -18,8 +17,7 @@ func (api *API) InitFriendRequest() {
 	api.BaseRoutes.FriendRequest.Handle("/friendslist", api.ApiSessionRequired(showFriendsList)).Methods("GET")
 }
 
-
-func sendFriendRequest(c *Context, w http.ResponseWriter, r *http.Request){
+func sendFriendRequest(c *Context, w http.ResponseWriter, r *http.Request) {
 	senderid := r.URL.Query().Get("senderid")
 	receiverid := r.URL.Query().Get("receiverid")
 	if senderid == "" {
@@ -30,7 +28,7 @@ func sendFriendRequest(c *Context, w http.ResponseWriter, r *http.Request){
 		c.SetInvalidUrlParam("receiverid")
 		return
 	}
-	
+
 	err := c.App.SendFriendRequest(senderid, receiverid)
 	if err != nil {
 		c.Err = err
@@ -39,7 +37,7 @@ func sendFriendRequest(c *Context, w http.ResponseWriter, r *http.Request){
 	ReturnStatusOK(w)
 }
 
-func rejectFriendRequest(c *Context, w http.ResponseWriter, r *http.Request){
+func rejectFriendRequest(c *Context, w http.ResponseWriter, r *http.Request) {
 	senderid := r.URL.Query().Get("senderid")
 	receiverid := r.URL.Query().Get("receiverid")
 	if senderid == "" {
@@ -50,7 +48,7 @@ func rejectFriendRequest(c *Context, w http.ResponseWriter, r *http.Request){
 		c.SetInvalidUrlParam("receiverid")
 		return
 	}
-	
+
 	err := c.App.RejectFriendRequest(senderid, receiverid)
 	if err != nil {
 		c.Err = err
@@ -59,7 +57,7 @@ func rejectFriendRequest(c *Context, w http.ResponseWriter, r *http.Request){
 	ReturnStatusOK(w)
 }
 
-func acceptFriendRequest(c *Context, w http.ResponseWriter, r *http.Request){
+func acceptFriendRequest(c *Context, w http.ResponseWriter, r *http.Request) {
 	senderid := r.URL.Query().Get("senderid")
 	receiverid := r.URL.Query().Get("receiverid")
 	if senderid == "" {
@@ -70,7 +68,7 @@ func acceptFriendRequest(c *Context, w http.ResponseWriter, r *http.Request){
 		c.SetInvalidUrlParam("receiverid")
 		return
 	}
-	
+
 	err := c.App.AcceptFriendRequest(senderid, receiverid)
 	if err != nil {
 		c.Err = err
@@ -79,14 +77,12 @@ func acceptFriendRequest(c *Context, w http.ResponseWriter, r *http.Request){
 	ReturnStatusOK(w)
 }
 
-func showReceivedFriendRequest(c *Context, w http.ResponseWriter, r *http.Request){
+func showReceivedFriendRequest(c *Context, w http.ResponseWriter, r *http.Request) {
 	receiverid := c.App.Session().UserId
 	if receiverid == "" {
 		c.SetInvalidUrlParam("receiverid")
 		return
 	}
-	
-
 
 	listRequest, err := c.App.ShowPendingFriendRequest(receiverid)
 	if err != nil {
@@ -97,14 +93,12 @@ func showReceivedFriendRequest(c *Context, w http.ResponseWriter, r *http.Reques
 	w.Write([]byte(model.FriendRequestToJson(listRequest)))
 }
 
-func showFriendsList(c *Context, w http.ResponseWriter, r *http.Request){
+func showFriendsList(c *Context, w http.ResponseWriter, r *http.Request) {
 	receiverid := c.App.Session().UserId
 	if receiverid == "" {
 		c.SetInvalidUrlParam("receiverid")
 		return
 	}
-	
-
 
 	listRequest, err := c.App.ShowFriendsList(receiverid)
 	if err != nil {

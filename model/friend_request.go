@@ -10,9 +10,9 @@ import (
 )
 
 type FriendRequest struct {
-	SenderId string `json:"sender_id"`
-	ReceiverId  string `json:"receiver_id"`
-	Status  string `json:"status"`
+	SenderId   string `json:"sender_id"`
+	ReceiverId string `json:"receiver_id"`
+	Status     string `json:"status"`
 }
 
 func (friend_request *FriendRequest) IsValid() *AppError {
