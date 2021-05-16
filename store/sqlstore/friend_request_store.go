@@ -38,8 +38,6 @@ func (es SqlFriendRequestStore) createIndexesIfNotExists() {
 	es.CreateIndexIfNotExists("idx_friend_request", "FriendRequest", "Status")
 }
 
-
-
 func (es SqlFriendRequestStore) Save(request *model.FriendRequest) (*model.FriendRequest, error) {
 
 	if err := es.GetMaster().Insert(request); err != nil {
@@ -49,7 +47,7 @@ func (es SqlFriendRequestStore) Save(request *model.FriendRequest) (*model.Frien
 	return request, nil
 }
 
-func (es SqlFriendRequestStore) FindFriendRequest(senderId string, receiverId string) (*model.FriendRequest, error)  {
+func (es SqlFriendRequestStore) FindFriendRequest(senderId string, receiverId string) (*model.FriendRequest, error) {
 	var friend_request *model.FriendRequest
 
 	err := es.GetReplica().SelectOne(&friend_request,
@@ -60,7 +58,7 @@ func (es SqlFriendRequestStore) FindFriendRequest(senderId string, receiverId st
 		WHERE
 			SenderId = :Key1
 			AND ReceiverId = :Key2`, map[string]string{"Key1": senderId, "Key2": receiverId})
-	
+
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -68,7 +66,7 @@ func (es SqlFriendRequestStore) FindFriendRequest(senderId string, receiverId st
 		return nil, errors.Wrap(err, "Could not find friend request")
 	}
 
-	return friend_request,nil
+	return friend_request, nil
 }
 
 func (es SqlFriendRequestStore) GetPendingList(senderId string) ([]*model.FriendRequest, error) {
@@ -86,7 +84,7 @@ func (es SqlFriendRequestStore) GetPendingList(senderId string) ([]*model.Friend
 	if err != nil {
 		return nil, errors.Wrap(err, "could not get list of pending friend requests")
 	}
-	return friend_requests,nil
+	return friend_requests, nil
 }
 
 func (es SqlFriendRequestStore) GetReceivedList(receiverId string) ([]*model.FriendRequest, error) {
@@ -124,6 +122,7 @@ func (es SqlFriendRequestStore) GetFriendList(userid string) ([]*model.FriendReq
 	}
 	return friend_requests, nil
 }
+
 // func (es SqlEmojiStore) GetList(offset, limit int, sort string) ([]*model.Emoji, error) {
 // 	var emoji []*model.Emoji
 
@@ -151,9 +150,9 @@ func (es SqlFriendRequestStore) RemoveRequest(senderId string, receiverId string
 			AND Status = :status`
 
 	queryParams := map[string]string{
-		"senderId":       senderId,
+		"senderId":   senderId,
 		"receiverId": receiverId,
-		"status": "accepted",
+		"status":     "accepted",
 	}
 	_, err := es.GetMaster().Exec(sql, queryParams)
 	if err != nil {
@@ -170,12 +169,12 @@ func (es SqlFriendRequestStore) AcceptRequest(senderId string, receiverId string
 			Status = :status
 		WHERE
 			SenderId = :senderId
-			AND ReceiverId = :receiverId`, 
-			map[string]interface{}{"status": "accepted", 
+			AND ReceiverId = :receiverId`,
+		map[string]interface{}{"status": "accepted",
 			"senderId": senderId, "receiverId": receiverId}); err != nil {
 		return errors.Wrap(err, "could not accept request")
 	} else if rows, _ := sqlResult.RowsAffected(); rows == 0 {
 		return store.NewErrNotFound("FriendRequest", receiverId)
 	}
- 	return nil
+	return nil
 }

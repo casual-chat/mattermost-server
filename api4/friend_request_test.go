@@ -4,18 +4,16 @@
 package api4
 
 import (
-	"testing"
 	"github.com/stretchr/testify/require"
-
+	"testing"
 )
-func TestFriendList(t *testing.T){
+
+func TestFriendList(t *testing.T) {
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	Client := th.Client
 
-
-
-	_, resp := Client.SendFriendRequest(th.BasicUser2.Id,th.BasicUser.Id)
+	_, resp := Client.SendFriendRequest(th.BasicUser2.Id, th.BasicUser.Id)
 	CheckNoError(t, resp)
 
 	list, resp := Client.GetReceviedList(th.BasicUser.Id)
@@ -43,7 +41,6 @@ func TestFriendList(t *testing.T){
 	list, resp = Client.GetFriendList(th.BasicUser.Id)
 	CheckNoError(t, resp)
 	require.Equal(t, len(list), 0, "request not d")
-
 
 	//require.Equal(t, newEmoji.Name, emoji.Name, "create with wrong name")
 

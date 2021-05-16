@@ -117,7 +117,7 @@ type Routes struct {
 	TermsOfService *mux.Router // 'api/v4/terms_of_service'
 	Groups         *mux.Router // 'api/v4/groups'
 
-	ExtChat *mux.Router // 'api/v4/extchat/{extchat_platform:[A-Za-z0-9]+}'
+	ExtChat       *mux.Router // 'api/v4/extchat/{extchat_platform:[A-Za-z0-9]+}'
 	FriendRequest *mux.Router // 'api/v4/friends'
 }
 

@@ -91,7 +91,7 @@ type SqlSupplierStores struct {
 	emoji                store.EmojiStore
 	emojiAccess          store.EmojiAccessStore
 	publicEmoji          store.PublicEmojiStore
-	friendRequest		 store.FriendRequestStore
+	friendRequest        store.FriendRequestStore
 	status               store.StatusStore
 	fileInfo             store.FileInfoStore
 	reaction             store.ReactionStore
@@ -1152,7 +1152,7 @@ func (ss *SqlSupplier) PublicEmoji() store.PublicEmojiStore {
 
 func (ss *SqlSupplier) FriendRequest() store.FriendRequestStore {
 	return ss.stores.friendRequest
-} 
+}
 
 func (ss *SqlSupplier) Status() store.StatusStore {
 	return ss.stores.status
